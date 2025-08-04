@@ -71,6 +71,9 @@ selected_subcategories = st.multiselect(
 if selected_subcategories:
     agent_data = agent_data[agent_data['Product Group List (Existing Product) (Product)'].isin(selected_subcategories)]
 
+agent_data = agent_data.drop(columns=['Mfg Last List Price', 'Price Group'], errors='ignore')
+
+
 if 'Opps this year' in agent_data.columns:
     # Step 6: Calculate Demand Score and Reorder flag
     agent_data['Demand Score'] = agent_data['Opps this year'] / (
