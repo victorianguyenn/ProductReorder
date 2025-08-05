@@ -71,7 +71,7 @@ selected_subcategories = st.multiselect(
 if selected_subcategories:
     agent_data = agent_data[agent_data['Product Group List (Existing Product) (Product)'].isin(selected_subcategories)]
 
-columns_to_remove = ['MFG Last List Price', 'Price Group']
+columns_to_remove = ['Mfg Last List Price', 'Price Group']
 agent_data = agent_data.drop(columns=[col for col in columns_to_remove if col in agent_data.columns])
 
 if 'Opps this year' in agent_data.columns:
