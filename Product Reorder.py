@@ -80,8 +80,6 @@ if 'Opps this year' in agent_data.columns:
     agent_data['Reorder?'] = (agent_data['Demand Score'] > 1.3)
     #  | (agent_data['Qty in Stock'] == 0
 
-    agent_data = agent_data.drop(columns=['Mfg Last List Price', 'Price Group'], errors='ignore')
-
     # Step 7: Row highlighting function
     def highlight_row(row):
         styles = [''] * len(row)
