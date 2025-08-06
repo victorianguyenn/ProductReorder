@@ -58,7 +58,54 @@ agent_data = df_main[df_main['Agent'] == selected_agent].copy()
 agent_data['Price Group'] = pd.to_numeric(agent_data['Price Group'], errors='coerce')
 
 # Create tabs for table and chart
-tab1, tab2 = st.tabs(["📦 Product Table", "📊 Demand Score Chart"])
+homepage, tab1, tab2 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart"])
+
+homepage, tab1, tab2 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart"])
+
+with homepage:
+    st.header("📊 Product Group Distribution & Inventory vs. Demand")
+
+    # Pie chart: Product Group Distribution (for selected agent)
+    group_counts = agent_data['Product Group List (Existing Product) (Product)'].value_counts().reset_index()
+    group_counts.columns = ['Product Group', 'Count']
+
+    st.subheader("Product Group Distribution")
+    pie_chart = alt.Chart(group_counts).mark_arc(innerRadius=50).encode(
+        theta=alt.Theta(field="Count", type="quantitative"),
+        color=alt.Color(field="Product Group", type="nominal"),
+        tooltip=['Product Group', 'Count']
+    )
+    st.altair_chart(pie_chart, use_container_width=True)
+
+    # Bar chart: Product Group Distribution
+    bar_chart = alt.Chart(group_counts).mark_bar().encode(
+        x=alt.X('Product Group:N', sort='-y'),
+        y=alt.Y('Count:Q'),
+        color='Product Group:N',
+        tooltip=['Product Group', 'Count']
+    ).properties(height=350)
+    st.altair_chart(bar_chart, use_container_width=True)
+
+    # Grouped Bar Chart: Inventory vs. Demand by Product
+    st.subheader("Inventory vs. Demand (Top 20 by Demand Score)")
+    if 'Demand Score' in agent_data.columns:
+        top_products = agent_data.sort_values(by='Demand Score', ascending=False).head(20)
+        inventory_vs_demand = pd.melt(
+            top_products,
+            id_vars=['Item'],
+            value_vars=['Qty in Stock', 'Opps this year'],
+            var_name='Metric',
+            value_name='Value'
+        )
+        grouped_bar = alt.Chart(inventory_vs_demand).mark_bar().encode(
+            x=alt.X('Item:N', sort=top_products['Item'].tolist(), title='Product'),
+            y=alt.Y('Value:Q'),
+            color=alt.Color('Metric:N'),
+            tooltip=['Item', 'Metric', 'Value']
+        ).properties(height=350)
+        st.altair_chart(grouped_bar, use_container_width=True)
+    else:
+        st.info("Demand Score not available yet. Please select an agent with data.")
 
 # Add multi-select subcategory filter (Product Group)
 subcategories = agent_data['Product Group List (Existing Product) (Product)'].dropna().unique()
