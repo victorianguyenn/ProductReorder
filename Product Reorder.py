@@ -57,9 +57,7 @@ selected_agent = st.selectbox("👤 Choose your name", df_main['Agent'].dropna()
 agent_data = df_main[df_main['Agent'] == selected_agent].copy()
 agent_data['Price Group'] = pd.to_numeric(agent_data['Price Group'], errors='coerce')
 
-# Create tabs for table and chart
-homepage, tab1, tab2 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart"])
-
+# Create tabs for home, table, and chart
 homepage, tab1, tab2 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart"])
 
 with homepage:
