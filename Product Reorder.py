@@ -10,6 +10,24 @@ warnings.filterwarnings("ignore", message="Data Validation extension is not supp
 st.set_page_config(layout="wide", page_title="Product Reorder Dashboard", page_icon="📦")
 warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)
 
+from PIL import Image
+
+# Load logo image (make sure it's in the same directory or adjust the path)
+logo = Image.open("ATEC-Logo-Icon-White-2022-2500x1879.png")
+
+# Create columns for logo and title
+col1, col2 = st.columns([1, 6])
+
+with col1:
+    st.image(logo, width=100)
+
+with col2:
+    st.markdown("""
+        <h1 style='margin-bottom: 0;'>ATEC Product Reorder Dashboard</h1>
+        <h4 style='color: gray; margin-top: 0;'>Rental Demand • Inventory • Reorder Insights</h4>
+    """, unsafe_allow_html=True)
+
+
 # Load Excel data
 df_main = pd.read_excel("Rental_Opportunity_Products_This_Year.xlsx", sheet_name="Sheet2")
 df_groups = pd.read_excel("Rental_Opportunity_Products_This_Year.xlsx", sheet_name="Rental Opportunity Products...")
