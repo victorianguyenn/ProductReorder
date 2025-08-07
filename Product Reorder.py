@@ -181,14 +181,7 @@ with tab2:
 
 with tab3:
     st.header("📘 Product Reorder Dashboard – Training Guide")
-
-    # PDF display
-    with open("ATEC Product Reorder Dashboard Training Guide.pdf", "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="900px" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
-
+    st.write("This guide provides an overview of how to use the Product Reorder Dashboard effectively.")
     # Optional download button
     with open("ATEC Product Reorder Dashboard Training Guide.pdf", "rb") as f:
         st.download_button(
