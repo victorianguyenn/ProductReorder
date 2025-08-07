@@ -159,6 +159,13 @@ def highlight_row(row):
             styles[col] = 'background-color: #d9f2d9'
     return styles
 
+
+# Alert for out-of-stock, high-demand items
+alert_items = agent_data[(agent_data['Qty in Stock'] == 0) & (agent_data['Demand Score'] > 1.3)]
+if not alert_items.empty:
+    st.error(f"🚨 {len(alert_items)} item(s) are out of stock but in high demand!")
+
+
 # Product Table Tab
 with tab1:
     st.write(f"📦 **Product List for {selected_agent}** (highlighted if reorder needed)")
