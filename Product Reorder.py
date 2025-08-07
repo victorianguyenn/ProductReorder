@@ -19,7 +19,7 @@ logo = Image.open("ATEC-Logo-Icon-White-2022-2500x1879.png")
 col1, col2 = st.columns([1, 6])
 
 with col1:
-    st.image(logo, width=100)
+    st.image(logo, width=300)
 
 with col2:
     st.markdown("""
