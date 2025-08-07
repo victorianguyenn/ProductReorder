@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import warnings
+import base64
 
 warnings.filterwarnings("ignore", message="Data Validation extension is not supported and will be removed")
 
@@ -66,7 +67,7 @@ if 'Opps this year' in agent_data.columns:
     agent_data = agent_data.sort_values(by='Demand Score', ascending=False)
 
 # Create tabs for home, table, and chart
-homepage, tab1, tab2 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart"])
+homepage, tab1, tab2, tab3 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart", "📘 Training Guide"])
 
 with homepage:
     st.header("📊 Product Group Distribution & Inventory vs. Demand")
@@ -177,3 +178,22 @@ with tab2:
 
     st.altair_chart(chart, use_container_width=True)
 # st.error("⚠️ Column 'Opps this year' not found in your Excel sheet.")  # Removed stray else
+
+with tab3:
+    st.header("📘 Product Reorder Dashboard – Training Guide")
+
+    # PDF display
+    with open("ATEC Product Reorder Dashboard Training Guide.pdf", "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="900px" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
+    # Optional download button
+    with open("ATEC Product Reorder Dashboard Training Guide.pdf", "rb") as f:
+        st.download_button(
+            label="📥 Download Training Guide",
+            data=f,
+            file_name="ATEC Product Reorder Dashboard Training Guide.pdf",
+            mime="application/pdf"
+        )
