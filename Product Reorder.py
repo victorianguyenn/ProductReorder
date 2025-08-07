@@ -57,6 +57,14 @@ selected_agent = st.selectbox("👤 Choose your name", df_main['Agent'].dropna()
 agent_data = df_main[df_main['Agent'] == selected_agent].copy()
 agent_data['Price Group'] = pd.to_numeric(agent_data['Price Group'], errors='coerce')
 
+if 'Opps this year' in agent_data.columns:
+    agent_data['Demand Score'] = agent_data['Opps this year'] / (
+        agent_data['Qty in Stock'] + agent_data['Qty On Rent'] + 1
+    )
+    agent_data['Reorder?'] = (agent_data['Demand Score'] > 1.3)
+
+    agent_data = agent_data.sort_values(by='Demand Score', ascending=False)
+
 # Create tabs for home, table, and chart
 homepage, tab1, tab2 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart"])
 
@@ -119,61 +127,53 @@ if selected_subcategories:
 columns_to_remove = ['Mfg Last List Price', 'Price Group']
 agent_data = agent_data.drop(columns=[col for col in columns_to_remove if col in agent_data.columns])
 
-if 'Opps this year' in agent_data.columns:
-    # Calculate Demand Score and Reorder flag
-    agent_data['Demand Score'] = agent_data['Opps this year'] / (
-        agent_data['Qty in Stock'] + agent_data['Qty On Rent'] + 1
-    )
-    agent_data['Reorder?'] = (agent_data['Demand Score'] > 1.3)
-    #  | (agent_data['Qty in Stock'] == 0
 
-    agent_data = agent_data.sort_values(by='Demand Score', ascending=False)
+   
 
-     # Add a search box for Item (SKU) or Product name
-    search_query = st.text_input("🔍 Search for Item or Product Name")
-    if search_query:
-        agent_data = agent_data[
-            agent_data['Item'].astype(str).str.contains(search_query, case=False, na=False) |
-            agent_data['Product name'].astype(str).str.contains(search_query, case=False, na=False)
-        ]
+# Add a search box for Item (SKU) or Product name
+search_query = st.text_input("🔍 Search for Item or Product Name")
+if search_query:
+    agent_data = agent_data[
+        agent_data['Item'].astype(str).str.contains(search_query, case=False, na=False) |
+        agent_data['Product name'].astype(str).str.contains(search_query, case=False, na=False)
+    ]
 
-    # Let user pick a column to sort by
-    sort_col = st.selectbox("Sort table by:", agent_data.columns, index=agent_data.columns.get_loc('Demand Score') if 'Demand Score' in agent_data.columns else 0)
-    sort_ascending = st.checkbox("Sort ascending?", value=False)
-    agent_data = agent_data.sort_values(by=sort_col, ascending=sort_ascending)
+# Let user pick a column to sort by
+sort_col = st.selectbox("Sort table by:", agent_data.columns, index=agent_data.columns.get_loc('Demand Score') if 'Demand Score' in agent_data.columns else 0)
+sort_ascending = st.checkbox("Sort ascending?", value=False)
+agent_data = agent_data.sort_values(by=sort_col, ascending=sort_ascending)
 
-    # Row highlighting function
-    def highlight_row(row):
-        styles = [''] * len(row)
-        if row['Reorder?']:
-            styles = ['background-color: #ffe6e6'] * len(row)
-        if 'Qty in Stock' in row:
-            q = row['Qty in Stock']
-            col = row.index.get_loc('Qty in Stock')
-            if q == 0:
-                styles[col] = 'background-color: #ffb3b3'
-            elif q < 3:
-                styles[col] = 'background-color: #fff2cc'
-            else:
-                styles[col] = 'background-color: #d9f2d9'
-        return styles
+# Row highlighting function
+def highlight_row(row):
+    styles = [''] * len(row)
+    if row['Reorder?']:
+        styles = ['background-color: #ffe6e6'] * len(row)
+    if 'Qty in Stock' in row:
+        q = row['Qty in Stock']
+        col = row.index.get_loc('Qty in Stock')
+        if q == 0:
+            styles[col] = 'background-color: #ffb3b3'
+        elif q < 3:
+            styles[col] = 'background-color: #fff2cc'
+        else:
+            styles[col] = 'background-color: #d9f2d9'
+    return styles
 
-    # Product Table Tab
-    with tab1:
-        st.write(f"📦 **Product List for {selected_agent}** (highlighted if reorder needed)")
-        st.dataframe(agent_data.style.apply(highlight_row, axis=1), use_container_width=True)
+# Product Table Tab
+with tab1:
+    st.write(f"📦 **Product List for {selected_agent}** (highlighted if reorder needed)")
+    st.dataframe(agent_data.style.apply(highlight_row, axis=1), use_container_width=True)
 
-    # Demand Score Chart Tab
-    with tab2:
-        st.write("📊 **Demand Score by Item**")
-        chart_data = agent_data[['Item', 'Demand Score']].sort_values(by='Demand Score', ascending=False).head(50)
+# Demand Score Chart Tab
+with tab2:
+    st.write("📊 **Demand Score by Item**")
+    chart_data = agent_data[['Item', 'Demand Score']].sort_values(by='Demand Score', ascending=False).head(50)
 
-        chart = alt.Chart(chart_data).mark_bar().encode(
-            x=alt.X('Item:N', sort='-y', title='Product'),
-            y=alt.Y('Demand Score:Q', title='Demand Score'),
-            tooltip=['Item', 'Demand Score']
-        ).properties(height=500)
+    chart = alt.Chart(chart_data).mark_bar().encode(
+        x=alt.X('Item:N', sort='-y', title='Product'),
+        y=alt.Y('Demand Score:Q', title='Demand Score'),
+        tooltip=['Item', 'Demand Score']
+    ).properties(height=500)
 
-        st.altair_chart(chart, use_container_width=True)
-else:
-    st.error("⚠️ Column 'Opps this year' not found in your Excel sheet.")
+    st.altair_chart(chart, use_container_width=True)
+# st.error("⚠️ Column 'Opps this year' not found in your Excel sheet.")  # Removed stray else
