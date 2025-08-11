@@ -120,6 +120,7 @@ with homepage:
             id_vars=['Item'],
             value_vars=['Qty in Stock', 'Opps this year'],
             var_name='Metric',
+
             value_name='Value'
         )
         grouped_bar = alt.Chart(inventory_vs_demand).mark_bar().encode(
@@ -143,7 +144,7 @@ selected_subcategories = st.multiselect(
 if selected_subcategories:
     agent_data = agent_data[agent_data['Product Group List (Existing Product) (Product)'].isin(selected_subcategories)]
 
-columns_to_remove = ['Mfg Last List Price', 'Price Group']
+columns_to_remove = ['Mfg Last List Price', 'Price Group', 'Qty in Stock', 'Qty On Rent']
 agent_data = agent_data.drop(columns=[col for col in columns_to_remove if col in agent_data.columns])
 
 
