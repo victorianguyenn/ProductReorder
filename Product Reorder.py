@@ -76,6 +76,8 @@ selected_agent = st.selectbox("👤 Choose your name", df_main['Agent'].dropna()
 agent_data = df_main[df_main['Agent'] == selected_agent].copy()
 agent_data['Price Group'] = pd.to_numeric(agent_data['Price Group'], errors='coerce')
 
+
+
 if 'Opps this year' in agent_data.columns:
     agent_data['Demand Score'] = agent_data['Opps this year'] / (
         agent_data['Qty in Stock'] + agent_data['Qty On Rent'] + 1
@@ -83,6 +85,31 @@ if 'Opps this year' in agent_data.columns:
     agent_data['Reorder?'] = (agent_data['Demand Score'] > 1.3)
 
     agent_data = agent_data.sort_values(by='Demand Score', ascending=False)
+
+    # Get all product groups for the selected agent
+agent_groups = agent_data['Product Group List (Existing Product) (Product)'].dropna().unique()
+
+# Dictionary to hold selected subcategories for each group
+selected_subcats = {}
+
+for group in agent_groups:
+    # Get all subcategories (here, just unique product names/items within the group)
+    subcat_options = agent_data[agent_data['Product Group List (Existing Product) (Product)'] == group]['Product name'].dropna().unique()
+    with st.expander(f"📂 {group} – Subcategory filter"):
+        chosen = st.multiselect(
+            f"Choose subcategories for {group}",
+            options=sorted(subcat_options),
+            default=sorted(subcat_options),
+            key=f"subcats_{group}"
+        )
+        selected_subcats[group] = chosen
+
+# Filter agent_data based on selected subcategories for each group
+mask = pd.Series([False] * len(agent_data))
+for group, subcats in selected_subcats.items():
+    mask |= (agent_data['Product Group List (Existing Product) (Product)'] == group) & (agent_data['Product name'].isin(subcats))
+agent_data = agent_data[mask]
+
 
 # Create tabs for home, table, and chart
 homepage, tab1, tab2, tab3 = st.tabs(["🏠 Homepage", "📦 Product Table", "📊 Demand Score Chart", "📘 Training Guide"])
@@ -136,7 +163,7 @@ with homepage:
 # Add multi-select subcategory filter (Product Group)
 subcategories = agent_data['Product Group List (Existing Product) (Product)'].dropna().unique()
 selected_subcategories = st.multiselect(
-    "📂 Filter by Product Group (Subcategories)",
+    "📂 Filter by Product Group ",
     options=sorted(subcategories),
     default=sorted(subcategories)  # show all by default
 )
