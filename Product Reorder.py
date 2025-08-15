@@ -37,7 +37,11 @@ df_main.columns = df_main.columns.str.strip()
 df_groups.columns = df_groups.columns.str.strip()
 
 # Deduplicate group sheet to one row per product
-group_lookup = df_groups[['Product name', 'Product Group List (Existing Product) (Product)']].drop_duplicates(subset='Product name')
+group_lookup = df_groups[
+    ['Product name',
+     'Product Group List (Existing Product) (Product)',
+     'Sub-Category List (Existing Product) (Product)']
+].drop_duplicates(subset='Product name')
 
 # Merge product group info into df_main
 df_main = df_main.merge(
@@ -136,19 +140,49 @@ with homepage:
     else:
         st.info("Demand Score not available yet. Please select an agent with data.")
 
-# Add multi-select subcategory filter (Product Group)
-subcategories = agent_data['Product Group List (Existing Product) (Product)'].dropna().unique()
-selected_subcategories = st.multiselect(
-    "📂 Filter by Product Group ",
-    options=sorted(subcategories),
-    default=sorted(subcategories)  # show all by default
+# Add multi-select Product Group filter
+group_col = 'Product Group List (Existing Product) (Product)'
+subcat_col = 'Sub-Category List (Existing Product) (Product)'
+
+subcategories_groups = agent_data[group_col].dropna().unique()
+selected_groups = st.multiselect(
+    "📂 Filter by Product Group",
+    options=sorted(subcategories_groups),
+    default=sorted(subcategories_groups)  # show all by default
 )
 
-if selected_subcategories:
-    agent_data = agent_data[agent_data['Product Group List (Existing Product) (Product)'].isin(selected_subcategories)]
+if selected_groups:
+    agent_data = agent_data[agent_data[group_col].isin(selected_groups)]
 
-columns_to_remove = ['Mfg Last List Price', 'Price Group']
-agent_data = agent_data.drop(columns=[col for col in columns_to_remove if col in agent_data.columns])
+# --- NEW: per-group subcategory dropdowns ---
+# Build a mask that keeps rows from each selected group that match chosen subcategories
+if selected_groups:
+    keep_mask = False
+    for g in selected_groups:
+        # List subcategories available within this group for current agent_data
+        subcats_in_g = sorted(agent_data.loc[agent_data[group_col] == g, subcat_col].dropna().unique().tolist())
+
+        # If a group has no subcats, skip the control and include all rows for that group
+        if len(subcats_in_g) == 0:
+            keep_mask = keep_mask | (agent_data[group_col] == g)
+            continue
+
+        chosen_subcats = st.multiselect(
+            f"🔽 Subcategories in “{g}”",
+            options=subcats_in_g,
+            default=subcats_in_g,     # select all by default
+            key=f"subcats_{g}"        # unique key per group
+        )
+
+        # If user deselects some, filter; otherwise include all subcats for that group
+        keep_mask = keep_mask | (
+            (agent_data[group_col] == g) &
+            (agent_data[subcat_col].isin(chosen_subcats) if len(chosen_subcats) > 0 else False)
+        )
+
+    # Apply combined mask across all selected groups
+    agent_data = agent_data[keep_mask]
+
 
 
    
