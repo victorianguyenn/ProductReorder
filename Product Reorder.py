@@ -200,6 +200,8 @@ sort_col = st.selectbox("Sort table by:", agent_data.columns, index=agent_data.c
 sort_ascending = st.checkbox("Sort ascending?", value=False)
 agent_data = agent_data.sort_values(by=sort_col, ascending=sort_ascending)
 
+agent_data = agent_data.drop(columns=['Product name'], errors='ignore')
+
 # Row highlighting function
 def highlight_row(row):
     styles = [''] * len(row)
